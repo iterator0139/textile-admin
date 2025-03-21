@@ -28,7 +28,11 @@ textile-admin/
 ├── scripts/
 │   └── schema.sql          # Database schema
 ├── uploads/                # File storage directory
-└── README.md
+├── .gitignore              # Git ignore file
+├── CONTRIBUTING.md         # Contribution guidelines
+├── LICENSE                 # MIT License
+├── README.md               # This file
+└── setup.sh                # Setup script
 ```
 
 ## Getting Started
@@ -37,6 +41,15 @@ textile-admin/
 
 - Go 1.16 or higher
 - MySQL 5.7 or higher
+- Git
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/yourusername/textile-admin.git
+cd textile-admin
+./setup.sh
+```
 
 ### Setup Database
 
