@@ -1,0 +1,15 @@
+server:
+  address: ":8080"
+  upload_dir: "uploads"
+  file_url_prefix: "http://localhost:8080/files"
+
+database:
+  host: "localhost"
+  port: 3306
+  user: "root"
+  password: ""
+  dbname: "textile_admin"
+
+log:
+  level: "debug"
+  format: "text" 

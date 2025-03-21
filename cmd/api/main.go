@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"os"
 	"textile-admin/internal/config"
 	"textile-admin/internal/domain/entity"
@@ -10,6 +9,7 @@ import (
 	"textile-admin/internal/repository"
 	"textile-admin/internal/service"
 	"textile-admin/pkg/db"
+	"textile-admin/pkg/logger"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -19,18 +19,42 @@ func main() {
 	// Load application configuration
 	cfg := config.LoadConfig()
 
+	// Initialize logger based on configuration
+	if cfg.LogFormat() == "json" {
+		logger.InitJSONLogger(cfg.LogLevel())
+	} else {
+		logger.InitTextLogger(cfg.LogLevel())
+	}
+
+	logger.Info("Starting application with environment: " + getEnv())
+	logger.Info("Server will listen on " + cfg.ServerAddress)
+
 	// Initialize all components
 	router := initializeApp(cfg)
 
 	// Start the server
-	log.Printf("Starting server on %s", cfg.ServerAddress)
+	logger.Info("Starting server on " + cfg.ServerAddress)
 	if err := router.Run(cfg.ServerAddress); err != nil {
-		log.Fatalf("Failed to start server: %v", err)
+		logger.Fatal("Failed to start server: " + err.Error())
 	}
+}
+
+// getEnv returns the current environment
+func getEnv() string {
+	env := os.Getenv("APP_ENV")
+	if env == "" {
+		env = "dev" // Default to development
+	}
+	return env
 }
 
 // initializeApp initializes all components of the application
 func initializeApp(cfg config.Config) *gin.Engine {
+	// Set Gin mode based on environment
+	if getEnv() == "prod" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
 	// Ensure upload directory exists
 	ensureUploadDirExists(cfg.UploadDir)
 
@@ -58,6 +82,7 @@ func initializeApp(cfg config.Config) *gin.Engine {
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "UP",
+			"env":    getEnv(),
 		})
 	})
 
@@ -68,9 +93,9 @@ func initializeApp(cfg config.Config) *gin.Engine {
 func ensureUploadDirExists(uploadDir string) {
 	if _, err := os.Stat(uploadDir); os.IsNotExist(err) {
 		if err := os.MkdirAll(uploadDir, 0755); err != nil {
-			log.Fatalf("Failed to create upload directory: %v", err)
+			logger.Fatal("Failed to create upload directory: " + err.Error())
 		}
-		log.Printf("Created upload directory: %s", uploadDir)
+		logger.Info("Created upload directory: " + uploadDir)
 	}
 }
 
@@ -79,19 +104,19 @@ func connectDatabase(cfg config.Config) *gorm.DB {
 	// Initialize database connection
 	dbConn, err := db.NewGormDBConnection(cfg.DBConfig)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		logger.Fatal("Failed to connect to database: " + err.Error())
 	}
 
-	log.Println("Database connection successful")
+	logger.Info("Database connection successful")
 	return dbConn
 }
 
 // migrateDatabase runs auto-migrations for database schema
 func migrateDatabase(db *gorm.DB) {
-	log.Println("Running database migrations...")
+	logger.Info("Running database migrations...")
 	err := db.AutoMigrate(&entity.User{}, &entity.ReadingTask{})
 	if err != nil {
-		log.Fatalf("Failed to run database migrations: %v", err)
+		logger.Fatal("Failed to run database migrations: " + err.Error())
 	}
-	log.Println("Database migrations completed successfully")
+	logger.Info("Database migrations completed successfully")
 } 

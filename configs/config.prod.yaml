@@ -1,0 +1,15 @@
+server:
+  address: ":8080"
+  upload_dir: "/var/textile-admin/uploads"
+  file_url_prefix: "https://api.example.com/files"
+
+database:
+  host: "db.example.com"
+  port: 3306
+  user: "textile_user"
+  password: "${DB_PASSWORD}" # 生产环境密码使用环境变量替代
+  dbname: "textile_admin_prod"
+
+log:
+  level: "info"
+  format: "json" 
